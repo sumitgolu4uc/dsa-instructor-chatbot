@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>DSA Instructor</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #111827;
+      color: #d1d5db;
+      display: flex;
+      height: 100vh;
+    }
+    .container {
+      display: flex;
+      width: 100%;
+    }
+    .sidebar {
+      background-color: #1f2937;
+      padding: 20px;
+      width: 250px;
+    }
+    .sidebar h2 {
+      color: #8b5cf6;
+      margin-bottom: 20px;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+    .sidebar ul li {
+      margin: 15px 0;
+      cursor: pointer;
+    }
+    .main {
+      flex: 1;
+      padding: 40px;
+      background-color: #1e293b;
+    }
+    .ask-box {
+      background-color: #334155;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+    .ask-box h3 {
+      color: #93c5fd;
+    }
+    .hint {
+      font-size: 14px;
+      color: #cbd5e1;
+      margin-bottom: 10px;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      background-color: #0f172a;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      resize: none;
+    }
+    button {
+      background-color: #8b5cf6;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .response-box {
+      background-color: #334155;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    #response {
+      margin-top: 10px;
+      color: #f1f5f9;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+      <h2>DSA<br>Instructor</h2>
+      <ul>
+        <li>Dashboard</li>
+        <li>History</li>
+        <li>Tutorials</li>
+        <li>Playground</li>
+        <li>Settings</li>
+      </ul>
+    </aside>
+
+    <main class="main">
+      <div class="ask-box">
+        <h3>Ask a DSA Question</h3>
+        <p class="hint">Only DSA-related questions will be answered. Others will be rejected rudely.</p>
+        <textarea id="question" placeholder="Type your DSA question here..."></textarea>
+        <button onclick="askQuestion()">Ask DSA Instructor</button>
+      </div>
+
+      <div class="response-box">
+        <h4>Instructor's Response</h4>
+        <div id="response">Waiting for your question...</div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API_KEY = "AIzaSyD08MwQ1AWUAk32TTHX5FkWmxHL4ymAYSg";
+
+    async function askQuestion() {
+      const question = document.getElementById("question").value.trim();
+      const responseBox = document.getElementById("response");
+
+      if (!question) {
+        responseBox.innerText = "Please enter a question!";
+        return;
+      }
+
+      responseBox.innerText = "Thinking...";
+
+      const requestBody = {
+        contents: [
+          {
+            role: "user",
+            parts: [
+              { text: question }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 300
+        },
+        systemInstruction: {
+          role: "system",
+          parts: [
+            {
+              text: `You are a DSA Instructor. You only answer questions related to Data Structures and Algorithms. If the user asks anything unrelated, respond rudely. Example:
+User: How are you?
+DSA Instructor: You dumb, ask me some sensible DSA question.`
+            }
+          ]
+        }
+      };
+
+      try {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestBody)
+          }
+        );
+
+        const data = await res.json();
+        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response.";
+        responseBox.innerText = reply;
+      } catch (err) {
+        responseBox.innerText = "Error: " + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
